@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=320" />
+
+	<title>Taipei Bus Information</title>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+	<script>
+var myPos;
+
+if (typeof(String.prototype.toRad) === "undefined") {
+	Number.prototype.toRad = function() {
+		return this * Math.PI / 180;
+	}
+}
+
+function Geoposition(lon, lat, name, id, accuracy){
+	this.lon=lon;
+	this.lat=lat;
+	this.accuracy=accuracy;
+	this.name=name;
+	this.id=id;
+}
+
+function getNearbyStations(){
+	$("#nearbyStops ul").empty();
+	$.getJSON('getstops', {lon: myPos.lon, lat: myPos.lat, accuracy: myPos.accuracy}, function(data) {
+		for(var key in data){
+			$('<li/>').text(data[key]).bind('click', {id: data[key]}, displayStatus).appendTo("#nearbyStops ul");
+		}
+	});
+
+}
+
+function chooseAnotherStop(){
+	$("#busStatus").hide();
+	$("#nearbyStops").show();
+}
+
+function displayTime(t){
+	var f;
+	if(t<=-1 || t>1440) f="unknown";
+	else if(t==0) f="arriving";
+	else f=t+" min.";
+
+	return $("<div/>").addClass("floatRight").text(f);
+}
+
+function displayStatus(event){
+	stopId=event.data.id;
+	$("#nearbyStops").hide();
+	$("#busStatus h2").text($(this).text());
+	$("#busStatus ul").empty();
+	$("#busStatus").show();
+
+	$.getJSON('getstopbus', {stopName: event.data.id}, function(data) {
+		for(var key in data){
+			var bus=data[key];
+			var routeIdTag = $('<span/>').addClass('routeId').text(bus.routeName);
+			$('<li/>').text(bus.isReturn?"返程":"去程").prepend(routeIdTag).append(displayTime(bus.estTime)).appendTo("#busStatus ul");
+		}
+	});
+
+}
+
+function locationGet(position) {
+	myPos=new Geoposition(position.coords.longitude, position.coords.latitude, "My position", 0, position.coords.accuracy);
+	$("#coords").text(myPos.lon + ", " + myPos.lat);
+	$("#coordsAccuracy").text(myPos.accuracy);
+	$("#geolocationInfo").show();
+	$("#geolocationStatus").hide();
+	$("#nearbyStops").show();
+	getNearbyStations();
+}
+ 
+function locationFailed(msg) {
+	$("#geolocationStatus h2").text('Failed to fetch your location.');
+}
+ 
+$(window).load(function(){
+	$("#geolocationStatus").show();
+	if (navigator.geolocation) {
+		navigator.geolocation.getCurrentPosition(locationGet, locationFailed);
+	} else {
+		$("#geolocationStatus h2").text('Your device does not support HTML5 geolocation.');
+	}
+});
+	</script>
+
+	<style>
+		html{width: 320px; font-size: 12pt; margin: 0 auto;}
+		h1, h2{font-size: 1em;}
+		section article{display: none;}
+
+		html{background:#ccc; color: #666;}
+		header{text-align: center; padding: 5px 0; border-bottom: 1px solid #999;}
+		h2{padding: 5px; text-align: center;}
+		h1, h2{text-shadow: 0 1px 1px rgba(255,255,255,0.8);}
+		section ul{background:#fff; margin: 5px; padding: 0;-moz-box-shadow: 0 0 8px rgba(0,0,0,0.3); -webkit-box-shadow: 0 0 8px rgba(0,0,0,0.3); border-radius: 5px; -webkit-border-radius: 5px; -moz-border-radius: 5px;}
+		section ul li{margin:0; padding: 10px; border-bottom: 1px solid #ccc; list-style: none;}
+		#nearbyStops ul li{cursor:pointer;}
+		section a{display: block; background:#fff; margin: 5px; padding: 10px; -webkit-box-shadow: 0 0 8px rgba(0,0,0,0.3); border-radius: 5px; color: #666; cursor: pointer;}
+		#busStatus span.routeId{font-weight:700; float: left; font-size: 2em; margin-right: 10px;}
+		div.floatRight{ text-align: right; }
+		li:last-child{border-bottom: none; }
+		footer{font-size: 8pt;}
+		#geolocationInfo{display: none;}
+		footer{text-align: center; padding: 5px 0; border-top: 1px solid #999;}
+		footer a{color: #555; text-decoration: none;}
+		footer a:hover{color: #555; text-decoration: underline;}
+	</style>
+
+</head>
+<body>
+	<header>
+		<h1>Taipei Bus Information</h1>
+	</header>
+
+	<section>
+
+		<article id="downloadStopsInfo">
+			<h2>Downloading files…</h2>
+		</article>
+
+		<article id="geolocationStatus">
+			<h2>Fetching geolocation status…</h2>
+		</article>
+
+		<article id="nearbyStops">
+			<h2>Choose a stop</h2>
+			<ul>
+			</ul>
+		</article>
+
+		<article id="busStatus">
+			<h2>Bus status</h2>
+			<ul>
+			</ul>
+			<a onclick="chooseAnotherStop()">Back</a>
+		</article>
+
+	</section>
+
+	<footer>
+		<p id="geolocationInfo">your location: <span id="coords"></span>, <br/>accuracy: <span id="coordsAccuracy"></span>m</p>
+		<p>by <a href="http://m-wei.net">medicalwei</a> / data from <a href="http://www.taipeibus.taipei.gov.tw/">5284</a> <br/><a href="http://dev.w3.org/geo/api/spec-source.html">html5 geolocation</a></p>
+	</footer>
+</body>
+</html>
+

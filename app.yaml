@@ -1,0 +1,20 @@
+application: taipei-bus-html5
+version: 0.00001
+runtime: python
+api_version: 1
+
+handlers:
+- url: /
+  static_files: static/index.html
+  upload: static/index.html
+
+- url: /getstops
+  script: getstops.py
+
+- url: /getstopbus
+  script: getstopbus.py
+
+builtins:
+- datastore_admin: off
+- remote_api: off
+
