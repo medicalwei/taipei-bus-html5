@@ -24,11 +24,14 @@ function Geoposition(lon, lat, name, id, accuracy){
 }
 
 function getNearbyStations(){
-	$("#nearbyStops ul").empty();
 	$.getJSON('getstops', {lon: myPos.lon, lat: myPos.lat, accuracy: myPos.accuracy}, function(data) {
+		$("#nearbyStops ul").empty();
 		for(var key in data){
 			$('<li/>').text(data[key]).bind('click', {id: data[key]}, displayStatus).appendTo("#nearbyStops ul");
 		}
+		$("#geolocationInfo").show();
+		$("#geolocationStatus").hide();
+		$("#nearbyStops").show();
 	});
 
 }
@@ -68,9 +71,6 @@ function locationGet(position) {
 	myPos=new Geoposition(position.coords.longitude, position.coords.latitude, "My position", 0, position.coords.accuracy);
 	$("#coords").text(myPos.lon + ", " + myPos.lat);
 	$("#coordsAccuracy").text(myPos.accuracy);
-	$("#geolocationInfo").show();
-	$("#geolocationStatus").hide();
-	$("#nearbyStops").show();
 	getNearbyStations();
 }
  
