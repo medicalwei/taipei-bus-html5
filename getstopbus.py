@@ -17,24 +17,35 @@ class MainHandler(webapp.RequestHandler):
 		req = urllib2.Request('http://www.taipeibus.taipei.gov.tw/Asp/GetTimeByRouteStop4.aspx?GSName=%s' % stopName)
 		response = urllib2.urlopen(req)
 		content = response.read().split("|")
-		a=[]
+		busLines=[]
 
 		for line in content:
 			try:
 				(routeName, lon, lat, isReturn, iDontKnowWhatItIs, estTime) = line.split(",")
 			except ValueError:
 				continue
+
 			routeName=routeName.decode('utf-8').strip(" _")
 			isReturn=int(isReturn.strip(" _")) == 1
 			estTime=int(estTime.strip(" _"))
 
+			# mark those which < 0 as unknown
 			if estTime<0:
 				estTime=86400
 
-			a.append({'routeName': routeName, 'isReturn': isReturn, 'estTime': estTime})
+			busLines.append({'routeName': routeName, 'isReturn': isReturn, 'estTime': estTime})
 
-		a=sorted(a,key=itemgetter('estTime'))
-		self.response.out.write(simplejson.dumps(a))
+		# sort the lines
+		busLines = sorted(busLines,key=itemgetter('estTime'))
+
+		# encapsulize
+		data = {'requestName': stopName.decode('utf-8'), 'content': busLines}
+
+		# send data
+		self.response.out.write(simplejson.dumps(data))
+
+
+
 
 def main():
 	application = webapp.WSGIApplication([('/getstopbus', MainHandler)])
