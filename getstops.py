@@ -7,9 +7,9 @@ import urllib2
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
-from geo.geomodel import GeoModel
 import geo.geotypes
 from django.utils import simplejson
+from geo.geomodel import GeoModel
 
 class StopInfo(GeoModel):
 	name = db.StringProperty()

@@ -15,6 +15,6 @@ handlers:
   script: getstopbus.py
 
 builtins:
-- datastore_admin: off
-- remote_api: off
+- datastore_admin: on
+- remote_api: on
 

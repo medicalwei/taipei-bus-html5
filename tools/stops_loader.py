@@ -21,10 +21,9 @@ class StopInfoLoader(Loader):
                     [('name', unicode_str),
                      ('location', lat_lon), # set lat and lon
                      ])
-
+  
   def handle_entity(self, entity):
     entity.update_location()
     return entity
-
 
 loaders = [StopInfoLoader]

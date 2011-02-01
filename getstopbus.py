@@ -10,11 +10,17 @@ from google.appengine.ext.webapp import util
 from django.utils import simplejson
 from operator import itemgetter
 
+class RouteInfo(db.Model):
+	routeName = db.StringProperty()
+	isReturn = db.IntegerProperty()
+	stopName = db.StringProperty()
+	nextStopName = db.StringProperty()
+
 class MainHandler(webapp.RequestHandler):
 	def get(self):
 		self.response.headers.add_header("Cache-Control", "no-cache")
-		stopName = self.request.get('stopName').encode('utf-8')
-		req = urllib2.Request('http://www.taipeibus.taipei.gov.tw/Asp/GetTimeByRouteStop4.aspx?GSName=%s' % stopName)
+		stopName = self.request.get('stopName')
+		req = urllib2.Request('http://www.taipeibus.taipei.gov.tw/Asp/GetTimeByRouteStop4.aspx?GSName=%s' % stopName.encode('utf-8'))
 		response = urllib2.urlopen(req)
 		content = response.read().split("|")
 		busLines=[]
@@ -25,21 +31,33 @@ class MainHandler(webapp.RequestHandler):
 			except ValueError:
 				continue
 
-			routeName=routeName.decode('utf-8').strip(" _")
-			isReturn=int(isReturn.strip(" _")) == 1
+			routeName=routeName.strip(" _").decode('utf-8')
+			isReturn=int(isReturn.strip(" _"))
 			estTime=int(estTime.strip(" _"))
+
+			try: 
+				nextStopName = RouteInfo.gql( "WHERE routeName = :1 "
+							"AND isReturn = :2 "
+							"AND stopName = :3 "
+							"LIMIT 1",
+							routeName,
+							isReturn,
+							stopName)[0].nextStopName
+			except ValueError:
+				nextStopName = ""
+				
 
 			# mark those which < 0 as unknown
 			if estTime<0:
 				estTime=86400
 
-			busLines.append({'routeName': routeName, 'isReturn': isReturn, 'estTime': estTime})
+			busLines.append({'routeName': routeName, 'nextStopName': nextStopName, 'estTime': estTime})
 
 		# sort the lines
 		busLines = sorted(busLines,key=itemgetter('estTime'))
 
 		# encapsulize
-		data = {'requestName': stopName.decode('utf-8'), 'content': busLines}
+		data = {'requestName': stopName, 'content': busLines}
 
 		# send data
 		self.response.out.write(simplejson.dumps(data))

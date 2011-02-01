@@ -66,7 +66,7 @@ function getStopBus(){
 				var bus=data.content[key];
 				var routeIdTag = $('<span/>').addClass('routeId').text(bus.routeName);
 				$('<li/>')
-					.text(bus.isReturn?"返程":"去程")
+					.html("&#x25b6; " + bus.nextStopName)
 					.prepend(routeIdTag)
 					.append(displayTime(bus.estTime))
 					.appendTo("#busStatus ul");
