@@ -43,8 +43,8 @@ class MainHandler(webapp.RequestHandler):
 							routeName,
 							isReturn,
 							stopName)[0].nextStopName
-			except ValueError:
-				nextStopName = ""
+			except IndexError:
+				nextStopName = "unknown"
 				
 
 			# mark those which < 0 as unknown
