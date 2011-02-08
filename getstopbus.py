@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import urllib2
 import cgi
 
+from google.appengine.api import urlfetch
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
@@ -20,9 +20,8 @@ class MainHandler(webapp.RequestHandler):
 	def get(self):
 		self.response.headers.add_header("Cache-Control", "no-cache")
 		stopName = self.request.get('stopName')
-		req = urllib2.Request('http://www.taipeibus.taipei.gov.tw/Asp/GetTimeByRouteStop4.aspx?GSName=%s' % stopName.encode('utf-8'))
-		response = urllib2.urlopen(req)
-		content = response.read().split("|")
+		response = urlfetch.fetch('http://www.taipeibus.taipei.gov.tw/Asp/GetTimeByRouteStop4.aspx?GSName=%s' % stopName.encode('utf-8'), deadline=10).content
+		content = response.split("|")
 		busLines=[]
 
 		for line in content:
